@@ -302,7 +302,7 @@ export default function HomePage() {
     // Use custom range if set, otherwise use data range
     const min = histogramRange?.min ?? dataMin;
     const max = histogramRange?.max ?? dataMax;
-    const binCount = Math.min(10, Math.max(3, numberOfTests));
+    const binCount = 5;
     const binSize = (max - min) / binCount;
     const unit = metricsConfig[selectedMetric]?.unit || '';
 
@@ -318,9 +318,9 @@ export default function HomePage() {
         (v) => v >= binStart && v < binEnd
       ).length;
 
-      // Format range with units
-      const formattedStart = formatValue(binStart, unit);
-      const formattedEnd = formatValue(binEnd, unit);
+      // Format range with units for histogram (fewer decimals)
+      const formattedStart = formatValueForHistogram(binStart, unit);
+      const formattedEnd = formatValueForHistogram(binEnd, unit);
       const rangeLabel = `${formattedStart}-${formattedEnd}`;
 
       bins.push({
@@ -343,6 +343,21 @@ export default function HomePage() {
         return value.toFixed(2);
       default:
         return `${value}${unit}`;
+    }
+  };
+
+  const formatValueForHistogram = (value: number, unit: string) => {
+    switch (unit) {
+      case 'ms':
+        const seconds = value / 1000;
+        return seconds >= 1 ? `${seconds.toFixed(1)}s` : `${seconds.toFixed(2)}s`;
+      case 'KiB':
+        const kib = value / 1024;
+        return kib >= 10 ? `${kib.toFixed(0)} KiB` : `${kib.toFixed(1)} KiB`;
+      case '':
+        return value >= 1 ? value.toFixed(1) : value.toFixed(2);
+      default:
+        return value >= 1 ? `${value.toFixed(1)}${unit}` : `${value.toFixed(2)}${unit}`;
     }
   };
 
