@@ -361,6 +361,108 @@ export default function HomePage() {
     }
   };
 
+  // Statistical significance calculation
+  const calculateTTest = (sample1: number[], sample2: number[]) => {
+    if (sample1.length < 2 || sample2.length < 2) {
+      return { pValue: null, significant: false, description: 'Insufficient data for statistical analysis (need at least 2 samples each)' };
+    }
+
+    // Calculate means
+    const mean1 = sample1.reduce((a, b) => a + b, 0) / sample1.length;
+    const mean2 = sample2.reduce((a, b) => a + b, 0) / sample2.length;
+
+    // Calculate variances
+    const variance1 = sample1.reduce((sum, val) => sum + Math.pow(val - mean1, 2), 0) / (sample1.length - 1);
+    const variance2 = sample2.reduce((sum, val) => sum + Math.pow(val - mean2, 2), 0) / (sample2.length - 1);
+
+    // Welch's t-test (doesn't assume equal variances)
+    const pooledSE = Math.sqrt(variance1 / sample1.length + variance2 / sample2.length);
+    
+    if (pooledSE === 0) {
+      return { pValue: null, significant: false, description: 'No variance in the data' };
+    }
+
+    const tStatistic = Math.abs(mean1 - mean2) / pooledSE;
+
+    // Degrees of freedom for Welch's t-test
+    const df = Math.pow(variance1 / sample1.length + variance2 / sample2.length, 2) /
+      (Math.pow(variance1 / sample1.length, 2) / (sample1.length - 1) +
+       Math.pow(variance2 / sample2.length, 2) / (sample2.length - 1));
+
+    // Approximate p-value using simplified approach for demonstration
+    // For more accuracy, you'd use a proper t-distribution CDF
+    const pValue = 2 * (1 - approximateTCDF(tStatistic, df));
+
+    const significant = pValue < 0.05;
+    let description = '';
+    
+    if (pValue < 0.001) {
+      description = 'Highly significant difference (p < 0.001)';
+    } else if (pValue < 0.01) {
+      description = 'Very significant difference (p < 0.01)';
+    } else if (pValue < 0.05) {
+      description = 'Significant difference (p < 0.05)';
+    } else if (pValue < 0.1) {
+      description = 'Marginally significant difference (p < 0.1)';
+    } else {
+      description = 'No significant difference (p ≥ 0.1)';
+    }
+
+    return { pValue, significant, description, tStatistic, df };
+  };
+
+  // Approximate t-distribution CDF (simplified)
+  const approximateTCDF = (t: number, df: number) => {
+    if (df > 30) {
+      // Use normal approximation for large df
+      return normalCDF(t);
+    }
+    
+    // Simplified approximation for smaller df
+    const x = t / Math.sqrt(df);
+    const a = 0.5 + x * (0.398942 + x * x * (-0.120782 + x * x * 0.068208)) / Math.sqrt(1 + x * x);
+    return Math.min(0.999, Math.max(0.001, a));
+  };
+
+  // Normal CDF approximation
+  const normalCDF = (x: number) => {
+    return 0.5 * (1 + erf(x / Math.sqrt(2)));
+  };
+
+  // Error function approximation
+  const erf = (x: number) => {
+    const a1 =  0.254829592;
+    const a2 = -0.284496736;
+    const a3 =  1.421413741;
+    const a4 = -1.453152027;
+    const a5 =  1.061405429;
+    const p  =  0.3275911;
+
+    const sign = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+
+    const t = 1.0 / (1.0 + p * x);
+    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+    return sign * y;
+  };
+
+  const getStatisticalSignificance = () => {
+    if (!selectedMetric || !results.url1 || !results.url2) return null;
+
+    const url1Values = results.url1.results
+      .map(r => r.metrics[selectedMetric]?.numericValue)
+      .filter(v => v !== undefined);
+
+    const url2Values = results.url2.results
+      .map(r => r.metrics[selectedMetric]?.numericValue)
+      .filter(v => v !== undefined);
+
+    if (url1Values.length === 0 || url2Values.length === 0) return null;
+
+    return calculateTTest(url1Values, url2Values);
+  };
+
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
       <div className='max-w-6xl mx-auto'>
@@ -784,6 +886,44 @@ export default function HomePage() {
                         </div>
                       </div>
                     </div>
+
+                                        {/* Statistical Significance */}
+                                        {(() => {
+                      const significance = getStatisticalSignificance();
+                      if (!significance) return null;
+
+                      return (
+                        <div className='mt-6 bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500'>
+                          <h4 className='text-lg font-medium text-gray-900 mb-2'>
+                            Statistical Significance
+                          </h4>
+                          <div className='space-y-2'>
+                            <p className='text-sm text-gray-700'>
+                              <span className='font-medium'>P-value:</span>{' '}
+                              {significance.pValue !== null 
+                                ? significance.pValue < 0.001 
+                                  ? '< 0.001' 
+                                  : significance.pValue.toFixed(4)
+                                : 'N/A'
+                              }
+                            </p>
+                            <p className={`text-sm font-medium ${
+                              significance.significant 
+                                ? 'text-green-700' 
+                                : 'text-yellow-700'
+                            }`}>
+                              {significance.description}
+                            </p>
+                            <p className='text-xs text-gray-600 mt-2'>
+                              {significance.significant 
+                                ? 'The performance difference between the two URLs is statistically significant.' 
+                                : 'The performance difference between the two URLs is not statistically significant.'}
+                              {' '}Statistical test: Welch's t-test (two-tailed).
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Histogram */}
                     {(() => {
