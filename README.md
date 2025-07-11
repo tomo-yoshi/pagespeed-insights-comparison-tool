@@ -77,7 +77,7 @@ The application will be available at [http://localhost:3000](http://localhost:30
 
 ## Usage
 
-1. **Enter URLs**: Input two URLs you want to compare (at least one is required)
+1. **Enter URLs**: Input two URLs you want to compare (both URLs are required)
 2. **Select Strategy**: Choose between Mobile or Desktop testing
 3. **Configure Tests**: Select the number of tests to run (1-20)
 4. **Run Tests**: Click "Run Comparison Test" to start

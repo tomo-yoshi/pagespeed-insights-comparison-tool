@@ -98,37 +98,35 @@ export default function HomePage() {
     const trimmedUrl2 = url2.trim();
     console.log('trimmed URLs', { trimmedUrl1, trimmedUrl2 });
 
-    // Validate both URLs
-    if (!trimmedUrl1 && !trimmedUrl2) {
-      alert('Please enter at least one URL to test');
+    // Validate both URLs are provided
+    if (!trimmedUrl1 || !trimmedUrl2) {
+      alert('Please enter both URLs to compare');
       return;
     }
 
-    const urlsToTest: Array<{ url: string; key: 'url1' | 'url2' }> = [];
-
-    if (trimmedUrl1) {
-      try {
-        new URL(trimmedUrl1);
-        urlsToTest.push({ url: trimmedUrl1, key: 'url1' });
-      } catch (error) {
-        alert(
-          'URL 1 is not valid. Please enter a valid URL (e.g., https://example.com)'
-        );
-        return;
-      }
+    // Validate URL formats
+    try {
+      new URL(trimmedUrl1);
+    } catch (error) {
+      alert(
+        'URL 1 is not valid. Please enter a valid URL (e.g., https://example.com)'
+      );
+      return;
     }
 
-    if (trimmedUrl2) {
-      try {
-        new URL(trimmedUrl2);
-        urlsToTest.push({ url: trimmedUrl2, key: 'url2' });
-      } catch (error) {
-        alert(
-          'URL 2 is not valid. Please enter a valid URL (e.g., https://example.com)'
-        );
-        return;
-      }
+    try {
+      new URL(trimmedUrl2);
+    } catch (error) {
+      alert(
+        'URL 2 is not valid. Please enter a valid URL (e.g., https://example.com)'
+      );
+      return;
     }
+
+    const urlsToTest = [
+      { url: trimmedUrl1, key: 'url1' as const },
+      { url: trimmedUrl2, key: 'url2' as const }
+    ];
 
     setIsLoading(true);
     setProgress({ url1: 0, url2: 0 });
@@ -523,7 +521,7 @@ export default function HomePage() {
                     });
                     handleTestBoth();
                   }}
-                  disabled={isLoading || (!url1.trim() && !url2.trim())}
+                  disabled={isLoading || (!url1.trim() || !url2.trim())}
                   className='flex items-center justify-center gap-2 px-8 py-3 w-full text-lg'
                   size='base'
                 >
