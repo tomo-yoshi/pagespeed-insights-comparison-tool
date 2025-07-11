@@ -349,9 +349,11 @@ export default function HomePage() {
   const formatValueForHistogram = (value: number, unit: string) => {
     switch (unit) {
       case 'ms':
+        // eslint-disable-next-line no-case-declarations
         const seconds = value / 1000;
         return seconds >= 1 ? `${seconds.toFixed(1)}s` : `${seconds.toFixed(2)}s`;
       case 'KiB':
+        // eslint-disable-next-line no-case-declarations
         const kib = value / 1024;
         return kib >= 10 ? `${kib.toFixed(0)} KiB` : `${kib.toFixed(1)} KiB`;
       case '':
