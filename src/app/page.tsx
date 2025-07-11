@@ -462,7 +462,13 @@ export default function HomePage() {
 
     if (url1Values.length === 0 || url2Values.length === 0) return null;
 
-    return calculateTTest(url1Values, url2Values);
+    const result = calculateTTest(url1Values, url2Values);
+    
+    // Add sample size information
+    return {
+      ...result,
+      sampleSizes: { url1: url1Values.length, url2: url2Values.length }
+    };
   };
 
   return (
@@ -544,12 +550,25 @@ export default function HomePage() {
                 options={strategyOptions}
               />
 
-              <Select
-                label='Number of Tests'
-                value={numberOfTests.toString()}
-                onChange={(value) => setNumberOfTests(parseInt(value))}
-                options={numberOfTestsOptions}
-              />
+              <div>
+                <Select
+                  label='Number of Tests'
+                  value={numberOfTests.toString()}
+                  onChange={(value) => setNumberOfTests(parseInt(value))}
+                  options={numberOfTestsOptions}
+                />
+                <div className='mt-1 text-xs text-gray-500'>
+                  <span className={numberOfTests >= 10 ? 'text-green-600 font-medium' : ''}>
+                    {numberOfTests < 5 && 'Basic reliability'}
+                    {numberOfTests >= 5 && numberOfTests < 10 && 'Good reliability'}
+                    {numberOfTests >= 10 && numberOfTests < 15 && 'Better reliability (recommended)'}
+                    {numberOfTests >= 15 && 'Best reliability'}
+                  </span>
+                  {numberOfTests < 10 && (
+                    <span className='text-amber-600'> • 10+ tests recommended for accurate significance testing</span>
+                  )}
+                </div>
+              </div>
 
               <Button
                 onClick={handleReset}
@@ -900,15 +919,20 @@ export default function HomePage() {
                             Statistical Significance
                           </h4>
                           <div className='space-y-2'>
-                            <p className='text-sm text-gray-700'>
-                              <span className='font-medium'>P-value:</span>{' '}
-                              {significance.pValue !== null 
-                                ? significance.pValue < 0.001 
-                                  ? '< 0.001' 
-                                  : significance.pValue.toFixed(4)
-                                : 'N/A'
-                              }
-                            </p>
+                            <div className='flex flex-wrap gap-4 text-sm text-gray-700 mb-2'>
+                              <span>
+                                <span className='font-medium'>Sample sizes:</span> URL1: {significance.sampleSizes?.url1 || 0}, URL2: {significance.sampleSizes?.url2 || 0}
+                              </span>
+                              <span>
+                                <span className='font-medium'>P-value:</span>{' '}
+                                {significance.pValue !== null 
+                                  ? significance.pValue < 0.001 
+                                    ? '< 0.001' 
+                                    : significance.pValue.toFixed(4)
+                                  : 'N/A'
+                                }
+                              </span>
+                            </div>
                             <p className={`text-sm font-medium ${
                               significance.significant 
                                 ? 'text-green-700' 
@@ -916,12 +940,37 @@ export default function HomePage() {
                             }`}>
                               {significance.description}
                             </p>
-                            <p className='text-xs text-gray-600 mt-2'>
-                              {significance.significant 
-                                ? 'The performance difference between the two URLs is statistically significant.' 
-                                : 'The performance difference between the two URLs is not statistically significant.'}
-                              {' '}Statistical test: Welch's t-test (two-tailed).
-                            </p>
+                            <div className='text-xs text-gray-600 mt-2 space-y-1'>
+                              <p>
+                                {significance.significant 
+                                  ? 'The performance difference between the two URLs is statistically significant.' 
+                                  : 'The performance difference between the two URLs is not statistically significant.'}
+                                {' '}Statistical test: Welch's t-test (two-tailed).
+                              </p>
+                              {(() => {
+                                const minSamples = Math.min(significance.sampleSizes?.url1 || 0, significance.sampleSizes?.url2 || 0);
+                                if (minSamples < 10) {
+                                  return (
+                                    <p className='text-amber-600 font-medium'>
+                                      ⚠️ Recommendation: Use 10+ tests per URL for more reliable statistical analysis.
+                                      {minSamples < 5 && ' Current sample size may not provide reliable results.'}
+                                    </p>
+                                  );
+                                } else if (minSamples >= 15) {
+                                  return (
+                                    <p className='text-green-600 font-medium'>
+                                      ✅ Excellent sample size for reliable statistical analysis.
+                                    </p>
+                                  );
+                                } else {
+                                  return (
+                                    <p className='text-green-600 font-medium'>
+                                      ✅ Good sample size for reliable statistical analysis.
+                                    </p>
+                                  );
+                                }
+                              })()}
+                            </div>
                           </div>
                         </div>
                       );

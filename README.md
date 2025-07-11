@@ -8,7 +8,7 @@ A Next.js application for comparing Core Web Vitals metrics between two URLs usi
 - **Multiple Test Runs**: Configure 1-20 tests per URL for statistical accuracy
 - **Rate Limiting**: Automatic 60-second intervals between tests to respect API limits
 - **Histogram Visualization**: Interactive charts showing metric distribution
-- **Statistical Analysis**: View average, median, and range for each metric
+- **Statistical Analysis**: View average, median, range, and statistical significance testing
 - **Customizable Range**: Adjust histogram X-axis ranges
 - **Mobile & Desktop**: Test both mobile and desktop strategies
 - **Real-time Progress**: Live countdown and progress tracking
@@ -86,6 +86,69 @@ The application will be available at [http://localhost:3000](http://localhost:30
    - Select different metrics from the dropdown
    - Adjust histogram range using the min/max inputs
    - Use "Auto Range" to reset to data-driven range
+7. **Statistical Significance**: Review p-values and significance testing when comparing two URLs
+
+## Statistical Significance Testing
+
+When comparing performance metrics between two URLs, the application performs statistical significance testing to determine if observed differences are meaningful or could be due to random variation.
+
+### How It Works
+
+- **Statistical Test**: Uses Welch's t-test (two-tailed) to compare metric values between URLs
+- **Requirements**: Minimum 2 test samples per URL for valid statistical analysis
+- **Calculation**: Compares means while accounting for different variances and sample sizes
+
+### Understanding P-Values
+
+The p-value indicates the probability that the observed difference occurred by chance:
+
+- **p < 0.001**: Highly significant difference (very strong evidence)
+- **p < 0.01**: Very significant difference (strong evidence)
+- **p < 0.05**: Significant difference (moderate evidence) - commonly used threshold
+- **p < 0.1**: Marginally significant difference (weak evidence)
+- **p ≥ 0.1**: No significant difference (insufficient evidence)
+
+### Interpretation
+
+**Significant Results (p < 0.05):**
+- The performance difference is likely real and not due to random variation
+- You can be confident that one URL genuinely performs better/worse than the other
+- Useful for making data-driven decisions about website optimizations
+
+**Non-Significant Results (p ≥ 0.05):**
+- The observed difference could be due to random variation
+- Cannot confidently conclude that one URL is better than the other
+- Consider running more tests or investigating other factors
+
+### Recommended Number of Tests
+
+For accurate statistical significance testing, the number of tests affects the reliability of your results:
+
+- **Minimum**: 3 tests per URL (basic comparison, limited reliability)
+- **Good**: 5-10 tests per URL (moderate reliability, suitable for most comparisons)
+- **Better**: 10-15 tests per URL (good reliability, recommended for important decisions)
+- **Best**: 15-20 tests per URL (high reliability, ideal for critical performance analysis)
+
+**Why More Tests Matter:**
+- Reduces impact of random variation and outliers
+- Increases statistical power to detect real differences
+- Provides more stable p-value calculations
+- Gives confidence in your optimization decisions
+
+**Practical Recommendation**: Start with 10 tests per URL as a good balance between accuracy and testing time (approximately 10-15 minutes per URL).
+
+### Best Practices
+
+1. **Sufficient Sample Size**: Use 10+ tests per URL for reliable statistical analysis
+2. **Consistent Conditions**: Test both URLs under similar network/server conditions
+3. **Multiple Metrics**: Check significance across different Core Web Vitals metrics
+4. **Context Matters**: Consider practical significance alongside statistical significance
+
+### Example Scenarios
+
+- **Highly Significant (p < 0.001)**: Clear performance winner for optimization decisions
+- **Not Significant (p > 0.1)**: URLs perform similarly; focus on other factors
+- **Marginal (0.05 < p < 0.1)**: Borderline case; consider additional testing
 
 ## Technical Details
 
