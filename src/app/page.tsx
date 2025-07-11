@@ -494,6 +494,7 @@ export default function HomePage() {
                     value={url1}
                     onChange={(e) => setUrl1(e.target.value)}
                     className='w-full'
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -506,6 +507,7 @@ export default function HomePage() {
                     value={url2}
                     onChange={(e) => setUrl2(e.target.value)}
                     className='w-full'
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -546,6 +548,7 @@ export default function HomePage() {
                 value={strategy}
                 onChange={(value) => setStrategy(value as Strategy)}
                 options={strategyOptions}
+                disabled={isLoading}
               />
 
               <div>
@@ -554,6 +557,7 @@ export default function HomePage() {
                   value={numberOfTests.toString()}
                   onChange={(value) => setNumberOfTests(parseInt(value))}
                   options={numberOfTestsOptions}
+                  disabled={isLoading}
                 />
                 <div className='mt-1 text-xs text-gray-500'>
                   <span className={numberOfTests >= 10 ? 'text-green-600 font-medium' : ''}>
